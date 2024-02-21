@@ -8,20 +8,20 @@ def normalize(x):
     x /= numpy.linalg.norm(x)
     return x
 
-def get_normal(obj, M):
+def getNormal(obj, M):
     if obj['type'] == 'sphere':
         N = normalize(M - obj['position'])
     elif obj['type'] == 'plane':
         N = obj['normal']
     return N
     
-def get_color(obj, M):
+def getColor(obj, M):
     color = obj['color']
     if not hasattr(color, '__len__'):
         color = color(M)
     return color
 
-def intersect_plane(RayOrigin, RayDir, PlanePos, PlaneNorm):
+def intersectPlane(RayOrigin, RayDir, PlanePos, PlaneNorm):
     denom = numpy.dot(RayDir, PlaneNorm)
     if numpy.abs(denom) < 1e-6:
         return numpy.inf
@@ -29,6 +29,22 @@ def intersect_plane(RayOrigin, RayDir, PlanePos, PlaneNorm):
     if d < 0:
         return numpy.inf
     return d
+
+def intersectSphere(RayOrigin, RayDir, SpherePos, SphereRadius):
+    a = numpy.dot(RayDir, RayDir)
+    dist = RayOrigin - SpherePos
+    b = 2 * numpy.dot(RayDir, dist)
+    c = numpy.dot(dist, dist) - SphereRadius * SphereRadius
+    disc = b * b - 4 * a * c
+    if disc > 0:
+        distSqrt = numpy.sqrt(disc)
+        q = (-b - distSqrt) / 2.0 if b < 0 else (-b + distSqrt) / 2.0
+        t0 = q / a
+        t1 = c / q
+        t0, t1 = min(t0, t1), max(t0, t1)
+        if t1 >= 0:
+            return t1 if t0 < 0 else t0
+    return numpy.inf
 
 def addSphere(position, radius, color):
     return dict(type='sphere', position=numpy.array(position), 
