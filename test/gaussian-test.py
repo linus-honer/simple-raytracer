@@ -22,3 +22,7 @@ class vec3():
     def components(self):
         return (self.x, self.y, self.z)
 rgb = vec3
+
+(width, height) = (512, 512)
+x = numpy.tile(numpy.linspace(-1, 1, width), height)
+y = numpy.repeat(numpy.linspace(-1, 1, height), width)
