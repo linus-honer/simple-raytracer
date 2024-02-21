@@ -26,3 +26,23 @@ rgb = vec3
 (width, height) = (512, 512)
 x = numpy.tile(numpy.linspace(-1, 1, width), height)
 y = numpy.repeat(numpy.linspace(-1, 1, height), width)
+
+if 0:
+    c = numpy.sqrt(.5)
+    print 'c', c
+    def norm(v):
+        # v -= min(v)
+        v /= max(v)
+        return v
+    gx = norm(numpy.exp(-(x*x) / (2 * c ** 2)))
+    gy = norm(numpy.exp(-(y*y) / (2 * c ** 2)))
+    g = gx * gy
+else:
+    g = ((x*x) + (y*y))
+    if 1:
+        g = g / 2
+    else:
+        g = numpy.sqrt(g) / 1.4
+    g = 1 - g
+print min(g), max(g)
+print g[256]
