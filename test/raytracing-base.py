@@ -4,6 +4,40 @@ import numpy
 width = 1920
 height = 1080
 
+def addSphere(position, radius, color):
+    return dict(type='sphere', position=numpy.array(position), 
+        radius=numpy.array(radius), color=numpy.array(color), reflection=.5)
+    
+def addPlane(position, normal):
+    return dict(type='plane', position=numpy.array(position), 
+        normal=numpy.array(normal),
+        color=lambda M: (checkerColor1 
+            if (int(M[0] * 2) % 2) == (int(M[2] * 2) % 2) else checkerColor2),
+        diffuse_c=.75, specular_c=.5, reflection=.25)
+
+checkerColor1 = numpy.ones(3)
+checkerColor2 = 0
+colorLight = numpy.ones(3)
+
+scene = [addSphere([0, 0, 1], .5, [1, 0, 0]),
+         addPlane([0, -.5, 0], [0, 1, 0]),
+    ]
+
+lightPos = numpy.array([5, 5, -10])
+
+ambient = .05
+diffuseC = 1
+specularC = 1
+specularK = 50
+
+depthMax = 5  # maximum number of reflections
+col = numpy.zeros(3)
+camOrigin = numpy.array([0, 0.35, -1])
+camDir = numpy.array([0, 0, 0])
+
+ratio = float(width) / height
+screenCoords = (-1, -1 / ratio + .25, 1, 1 / ratio + .25)
+
 def normalize(x):
     x /= numpy.linalg.norm(x)
     return x
@@ -51,38 +85,36 @@ def intersect(O, D, obj):
         return intersectPlane(O, D, obj['position'], obj['normal'])
     elif obj['type'] == 'sphere':
         return intersectSphere(O, D, obj['position'], obj['radius'])
-
-def addSphere(position, radius, color):
-    return dict(type='sphere', position=numpy.array(position), 
-        radius=numpy.array(radius), color=numpy.array(color), reflection=.5)
     
-def addPlane(position, normal):
-    return dict(type='plane', position=numpy.array(position), 
-        normal=numpy.array(normal),
-        color=lambda M: (checkerColor1 
-            if (int(M[0] * 2) % 2) == (int(M[2] * 2) % 2) else checkerColor2),
-        diffuse_c=.75, specular_c=.5, reflection=.25)
+def trace_ray(rayO, rayD):
+    t = numpy.inf
+    for i, obj in enumerate(scene):
+        tObj = intersect(rayO, rayD, obj)
+        if tObj < t:
+            t, objIdk = tObj, i
+    
+    if t == numpy.inf:
+        return
+    
+    obj = scene[objIdk]
 
-checkerColor1 = numpy.ones(3)
-checkerColor2 = 0
-color_light = numpy.ones(3)
+    M = rayO + rayD * t
 
-scene = [addSphere([0, 0, 1], .5, [1, 0, 0]),
-         addPlane([0, -.5, 0], [0, 1, 0]),
-    ]
+    N = getNormal(obj, M)
+    color = getColor(obj, M)
+    toL = normalize(L - M)
+    toO = normalize(O - M)
 
-lightPos = numpy.array([5., 5., -10.])
+    l = [intersect(M + N * .0001, toL, objSh) 
+            for k, objSh in enumerate(scene) if k != objIdk]
+    if l and min(l) < numpy.inf:
+        return
+    
+    colRay = ambient
 
-ambient = .05
-diffuseC = 1.
-specularC = 1.
-specularK = 50
+    colRay += obj.get('diffuse_c', diffuseC) * max(numpy.dot(N, toL), 0) * color
+    # blinn-phong shade
+    colRay += obj.get('specular_c', specularC) * max(numpy.dot(N, normalize(toL + toO)), 0) ** specularK * colorLight
+    return obj, M, N, colRay
 
-depth_max = 5  # maximum number of reflections
-col = numpy.zeros(3)
-camOrigin = numpy.array([0., 0.35, -1.])
-camDir = numpy.array([0., 0., 0.])
 img = numpy.zeros((height, width, 3))
-
-ratio = float(width) / height
-screenCoords = (-1, -1 / ratio + .25, 1, 1 / ratio + .25)
