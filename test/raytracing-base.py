@@ -80,16 +80,16 @@ def intersectSphere(RayOrigin, RayDir, SpherePos, SphereRadius):
             return t1 if t0 < 0 else t0
     return numpy.inf
 
-def intersect(O, D, obj):
+def intersect(RayOrigin, RayDirection, obj):
     if obj['type'] == 'plane':
-        return intersectPlane(O, D, obj['position'], obj['normal'])
+        return intersectPlane(RayOrigin, RayDirection, obj['position'], obj['normal'])
     elif obj['type'] == 'sphere':
-        return intersectSphere(O, D, obj['position'], obj['radius'])
+        return intersectSphere(RayOrigin, RayDirection, obj['position'], obj['radius'])
     
-def trace_ray(rayO, rayD):
+def traceRay(rayOrigin, rayDir):
     t = numpy.inf
     for i, obj in enumerate(scene):
-        tObj = intersect(rayO, rayD, obj)
+        tObj = intersect(rayOrigin, rayDir, obj)
         if tObj < t:
             t, objIdk = tObj, i
     
@@ -98,12 +98,12 @@ def trace_ray(rayO, rayD):
     
     obj = scene[objIdk]
 
-    M = rayO + rayD * t
+    M = rayOrigin + rayDir * t
 
     N = getNormal(obj, M)
     color = getColor(obj, M)
-    toL = normalize(L - M)
-    toO = normalize(O - M)
+    toL = normalize(lightPos - M)
+    toO = normalize(camOrigin - M)
 
     l = [intersect(M + N * .0001, toL, objSh) 
             for k, objSh in enumerate(scene) if k != objIdk]
@@ -118,3 +118,26 @@ def trace_ray(rayO, rayD):
     return obj, M, N, colRay
 
 img = numpy.zeros((height, width, 3))
+
+for i, x in enumerate(numpy.linspace(screenCoords[0], screenCoords[2], width)):
+    if i % 10 == 0:
+        print(i / float(width) * 100, "%")
+    for j, y in enumerate(numpy.linspace(screenCoords[1], screenCoords[3], height)):
+        col[:] = 0
+        camDir[:2] = (x, y)
+        D = normalize(camDir - camOrigin)
+        depth = 0
+        rayOrigin, rayDir = camOrigin, D
+        reflection = 1.
+        # Loop through initial and secondary rays.
+        while depth < depthMax:
+            traced = traceRay(rayOrigin, rayDir)
+            if not traced:
+                break
+            obj, M, N, col_ray = traced
+            # Reflection: create a new ray.
+            rayOrigin, rayDir = M + N * .0001, normalize(rayDir - 2 * numpy.dot(rayDir, N) * N)
+            depth += 1
+            col += reflection * col_ray
+            reflection *= obj.get('reflection', 1.)
+        img[height - j - 1, i, :] = numpy.clip(col, 0, 1)
