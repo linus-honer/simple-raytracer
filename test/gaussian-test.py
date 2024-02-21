@@ -46,3 +46,11 @@ else:
     g = 1 - g
 print min(g), max(g)
 print g[256]
+
+c0 = rgb(1, 1, 0)
+c1 = rgb(0, 0, 1)
+
+color = (c0 * g) + c1 * (1 - g)
+
+rgb = [Image.fromarray((255 * c.reshape((height, width))).astype(numpy.uint8), "L") for c in color.components()]
+Image.merge("RGB", rgb).save("gaussian.png")
