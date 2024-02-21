@@ -141,3 +141,6 @@ for i, x in enumerate(numpy.linspace(screenCoords[0], screenCoords[2], width)):
             col += reflection * col_ray
             reflection *= obj.get('reflection', 1.)
         img[height - j - 1, i, :] = numpy.clip(col, 0, 1)
+
+im = Image.fromarray((255 * img).astype(numpy.uint8), "RGB")
+im.save("output.png")
