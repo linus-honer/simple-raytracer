@@ -21,6 +21,15 @@ def get_color(obj, M):
         color = color(M)
     return color
 
+def intersect_plane(RayOrigin, RayDir, PlanePos, PlaneNorm):
+    denom = numpy.dot(RayDir, PlaneNorm)
+    if numpy.abs(denom) < 1e-6:
+        return numpy.inf
+    d = numpy.dot(PlanePos - RayOrigin, PlaneNorm) / denom
+    if d < 0:
+        return numpy.inf
+    return d
+
 def addSphere(position, radius, color):
     return dict(type='sphere', position=numpy.array(position), 
         radius=numpy.array(radius), color=numpy.array(color), reflection=.5)
