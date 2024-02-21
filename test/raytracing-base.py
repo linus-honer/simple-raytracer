@@ -46,6 +46,12 @@ def intersectSphere(RayOrigin, RayDir, SpherePos, SphereRadius):
             return t1 if t0 < 0 else t0
     return numpy.inf
 
+def intersect(O, D, obj):
+    if obj['type'] == 'plane':
+        return intersectPlane(O, D, obj['position'], obj['normal'])
+    elif obj['type'] == 'sphere':
+        return intersectSphere(O, D, obj['position'], obj['radius'])
+
 def addSphere(position, radius, color):
     return dict(type='sphere', position=numpy.array(position), 
         radius=numpy.array(radius), color=numpy.array(color), reflection=.5)
