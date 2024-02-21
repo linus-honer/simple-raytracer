@@ -4,6 +4,23 @@ import numpy
 width = 1920
 height = 1080
 
+def normalize(x):
+    x /= numpy.linalg.norm(x)
+    return x
+
+def get_normal(obj, M):
+    if obj['type'] == 'sphere':
+        N = normalize(M - obj['position'])
+    elif obj['type'] == 'plane':
+        N = obj['normal']
+    return N
+    
+def get_color(obj, M):
+    color = obj['color']
+    if not hasattr(color, '__len__'):
+        color = color(M)
+    return color
+
 def addSphere(position, radius, color):
     return dict(type='sphere', position=numpy.array(position), 
         radius=numpy.array(radius), color=numpy.array(color), reflection=.5)
@@ -34,7 +51,7 @@ depth_max = 5  # maximum number of reflections
 col = numpy.zeros(3)
 camOrigin = numpy.array([0., 0.35, -1.])
 camDir = numpy.array([0., 0., 0.])
-img = numpy.zeros((h, w, 3))
+img = numpy.zeros((height, width, 3))
 
 ratio = float(width) / height
-screenCoords = (-1, -1 / r + .25, 1, 1 / r + .25)
+screenCoords = (-1, -1 / ratio + .25, 1, 1 / ratio + .25)
