@@ -173,3 +173,6 @@ class vec3():
 
 def array_to_vec3(array):
     return vec3(array[0],array[1],array[2])
+
+global rgb
+rgb = vec3
