@@ -16,3 +16,25 @@ class Ray:
     
     def extract(self,hit_check):
         return Ray(self.origin.extract(hit_check), self.dir.extract(hit_check), self.depth,  self.n.extract(hit_check), self.reflections, self.transmissions,self.diffuse_reflections)
+
+class Hit:
+    def __init__(self, distance, orientation, material, collider,surface):
+        self.distance = distance
+        self.orientation = orientation 
+        self.material = material
+        self.collider = collider
+        self.surface = surface
+        self.u = None
+        self.v = None
+        self.N = None
+        self.point = None 
+
+    def get_uv(self):
+        if self.u is None:
+            self.u, self.v = self.collider.assigned_primitive.get_uv(self)
+        return self.u, self.v
+
+    def get_normal(self):
+        if self.N is None:
+            self.N = self.collider.get_N(self)
+        return self.N
